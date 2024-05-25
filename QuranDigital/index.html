@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Qur'an Digital</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            background-image: url(background\ vektor.jpg);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        h1 {
+            margin: 20px 0;
+            font-size: 2.5em;
+            text-align: center;
+            color: #ffffff;
+            font-family: 'Times New Roman', Times, serif;
+            padding: 10px;
+            display: grid;
+            background-color: #b7d8b7; 
+            border-radius: 10px; 
+        }
+        .surah-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #b8debc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            font-size: 1.3em;
+        }
+        .surah-list li {
+            padding: 10px 20px;
+            border-bottom: 1px solid #ccc;
+            transition: background-color 0.3s;
+        }
+        .surah-list li:hover {
+            background-color: #e9ecef;
+        }
+        .surah-list li a {
+            text-decoration: none;
+            color: #343a40;
+            display: block;
+        }
+        .surah-list li a:hover {
+            color: #b5c3d3;
+        }
+        .surah-detail {
+            padding: 20px;
+            background-color: #c5ebc5;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .surah-detail h2 {
+            color: #dfa548;
+        }
+        .ayat {
+            margin-top: 20px;
+        }
+        .ayat p {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            font-size: 1.2em;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .ayat p strong {
+            font-size: 1.4em;
+            direction: rtl;
+            text-align: right;
+        }
+        .ayat p .terjemahan {
+            color: #6c757d;
+            font-size: 1.0em;
+            display: block;
+            text-align: left;
+            width: 100%;
+        }
+        .surah-detail ul li a {
+            color: #c58b28;
+        }
+        .ayat p:nth-child(odd) {
+            background-color: rgb(235, 226, 187); /* Warna latar belakang untuk ayat ganjil */
+        }
+        .ayat p:nth-child(even) {
+            background-color: #ffffff; /* Warna latar belakang untuk ayat genap */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Qur'an</h1>
+        <ul class="surah-list">
+            <!-- List Surah -->
+        </ul>
+        <div class="surah-detail">
+            <!-- Detail Surah -->
+        </div>
+        <div class="ayat">
+            <!-- Ayat -->
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+        function convertToArabicNumerals(num) {
+            const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return num.toString().split('').map(digit => arabicNumerals[digit]).join('');
+        }
+
+        $(document).ready(function() {
+            $.ajax({
+                url: 'https://equran.id/api/v2/surat',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $.each(data.data, function(index, surah) {
+                        $('.surah-list').append('<li><a href="#" data-nomor="' + surah.nomor + '">' + surah.nama + ' (' + surah.namaLatin + ')</a></li>');
+                    });
+                    $('.surah-list li a').on('click', function() {
+                        var nomor = $(this).data('nomor');
+                        $.ajax({
+                            url: 'https://equran.id/api/v2/surat/' + nomor,
+                            method: 'GET',
+                            dataType: 'json',
+                            success: function(data) {
+                                var surah = data.data;
+                                $('.surah-detail').html('<h2>' + surah.nama + ' (' + surah.namaLatin + ')</h2>' +
+                                    '<p>Jumlah Ayat: ' + surah.jumlahAyat + '</p>' +
+                                    '<p>Tempat Turun: ' + surah.tempatTurun + '</p>' +
+                                    '<p>Arti: ' + surah.arti + '</p>' +
+                                    '<p>Deskripsi: ' + surah.deskripsi + '</p>' +
+                                    '<p>Audio Full:</p>' +
+                                    '<ul>');
+                                $.each(surah.audioFull, function(index, audio) {
+                                    $('.surah-detail ul').append('<li><a href="' + audio + '">Audio by ' + index + '</a></li>');
+                                });
+
+                                // Mengambil dan menampilkan ayat-ayat
+                                $('.ayat').html('<h3>Ayat-ayat</h3>');
+                                $.each(surah.ayat, function(index, ayat) {
+                                    $('.ayat').append('<p><strong>' + convertToArabicNumerals(index + 1) + '. ' + ayat.teksArab + '</strong><br>' +
+                                        '<span class="terjemahan">' + ayat.teksLatin + '</span><br>' +
+                                        '<span class="terjemahan">' + ayat.teksIndonesia + '</span></p>');
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
